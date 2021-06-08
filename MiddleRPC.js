@@ -1,4 +1,4 @@
-
+var crypto = require('crypto');
 const axios = require('axios')
 
 
@@ -24,7 +24,7 @@ var sleep = (ms) => new Promise((resolve) => {
     setTimeout(resolve, ms)
 })
 
-module.exports = (RPC, CHAIN_ID) => {
+module.exports = (RPC, CHAIN_ID, timeCache = 5000, timeWait = 5000) => {
     var CACHE_RPC = {
         COUNT_KEY: 0
     }
@@ -38,7 +38,7 @@ module.exports = (RPC, CHAIN_ID) => {
                 "result": CHAIN_ID
             })
         }
-        if (body.method != 'eth_blockNumber' && body.method != 'eth_getBlockByNumber') {
+        if (body.method != 'eth_blockNumber' && body.method != 'eth_getBlockByNumber' && body.method != 'eth_call') {
             var { data } = await axios.post(RPC, body)
             return res.json(data)
         }
@@ -65,19 +65,35 @@ module.exports = (RPC, CHAIN_ID) => {
             key += body.params[0]
         }
 
+        if (body.method == 'eth_call') {
+            try {
+                var params = JSON.stringify(body.params)
+                key += crypto.createHash('md5').update(params).digest('hex');
+            }
+            catch (ex) {
+                var { data } = await axios.post(RPC, body)
+                return res.json(data)
+            }
+        }
+
         if (!CACHE_RPC[key]) {
             CACHE_RPC.COUNT_KEY++;
         }
 
         CACHE_RPC[key] = CACHE_RPC[key] || {
             time: 0,
-            old: 5 * 1000,
+            old: timeCache,
             value: 0,
             isLoading: false
         }
 
-        if (CACHE_RPC[key].isLoading) {
-            await sleep(2000)
+        for (var i = 0; i < 5; i++) {
+            if (CACHE_RPC[key].isLoading) {
+                await sleep(Math.round(timeWait / 5))
+            }
+            else {
+                break;
+            }
         }
 
         if (CACHE_RPC[key].time + CACHE_RPC[key].old <= new Date().getTime()) {
