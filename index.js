@@ -22,8 +22,8 @@ app.use(function(req, res, next) {
   next()
 })
 
-app.post('/ethereum', MiddleRPC(process.env.ETHEREUM_RPC))
-app.post('/tomochain', MiddleRPC(process.env.TOMOCHAIN_RPC))
+app.post('/ethereum', MiddleRPC(process.env.ETHEREUM_RPC, '0x1'))
+app.post('/tomochain', MiddleRPC(process.env.TOMOCHAIN_RPC, '0x58'))
 
 http.listen(process.env.PORT || 8020, async (err) => {
   if (err) {

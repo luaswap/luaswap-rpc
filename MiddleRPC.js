@@ -23,7 +23,7 @@ var sleep = (ms) => new Promise((resolve) => {
     setTimeout(resolve, ms)
 })
 
-module.exports = (RPC) => {
+module.exports = (RPC, CHAIN_ID) => {
     var CACHE_RPC = {
         COUNT_KEY: 0
     }
@@ -34,7 +34,7 @@ module.exports = (RPC) => {
             return res.json({
                 "jsonrpc": "2.0",
                 "id": body.id,
-                "result": "0x1"
+                "result": CHAIN_ID
             })
         }
         if (body.method != 'eth_blockNumber' && body.method != 'eth_getBlockByNumber') {
