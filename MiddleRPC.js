@@ -9,6 +9,7 @@ const TRY = fn => async (req, res) => {
             break;
         }
         catch (ex) {
+            console.error(ex.toString())
             if (i == 4) {
                 res.status(ex.response.status)
                     .send(ex.response.data)
